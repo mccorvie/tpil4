@@ -388,7 +388,6 @@ first simplify the arguments recursively, and then
 apply simpConst to try to simplify the result.
 -/
 
-
 def simpConst : Expr → Expr
   | plus (const n₁) (const n₂)  => const (n₁ + n₂)
   | times (const n₁) (const n₂) => const (n₁ * n₂)
@@ -397,18 +396,94 @@ def simpConst : Expr → Expr
 def fuse : Expr → Expr 
   | plus  e₁ e₂ => simpConst (plus (fuse e₁) (fuse e₂))
   | times e₁ e₂ => simpConst (times (fuse e₁) (fuse e₂)) 
-  | e           => e 
+  |  e => e
+  -- | const n     => const n
+  -- | var n       => var n
 
 
 
 theorem simpConst_eq (v : Nat → Nat)
         : ∀ e : Expr, eval v (simpConst e) = eval v e := by
-        sorry
+      intro e
+      rw [simpConst]
+      split <;> rfl
+
+theorem simpConst_eq' (v : Nat → Nat)
+        : ∀ e : Expr, eval v (simpConst e) = eval v e := by
+      intro e
+      match e with
+      | const n => rfl
+      | var n   => rfl
+      | plus t1 t2 => match t1, t2 with
+        | const _, const _ => rfl
+        | var n, _ => rfl
+        | _, var n => simp[simpConst]
+        | plus _ _,  _ => rfl
+        | times _ _, _ => rfl
+        | _, plus  _ _ => simp[simpConst]
+        | _, times _ _ => simp[simpConst]
+      | times t1 t2 => match t1, t2 with
+        | const _, const _ => rfl
+        | var n, _ => rfl
+        | _, var n => simp[simpConst]
+        | plus _ _,  _ => rfl
+        | times _ _, _ => rfl
+        | _, plus  _ _ => simp[simpConst]
+        | _, times _ _ => simp[simpConst]
+        
+
+theorem fuse_eq (v : Nat → Nat) : 
+      ∀ e : Expr, eval v (fuse e) = eval v e := by 
+    let rec fuse_eq' (e1 : Expr) : eval v (fuse e1) = eval v e1 := by
+      match e1 with
+      | const n => rfl
+      | var n   => rfl
+      | plus e₁ e₂ => simp [fuse, simpConst_eq, fuse_eq' e₁, fuse_eq' e₂, eval]
+      | times e₁ e₂ => simp [fuse, simpConst_eq, fuse_eq' e₁, fuse_eq' e₂, eval]
+    intro e
+    exact fuse_eq' e
 
 
-theorem fuse_eq (v : Nat → Nat)
-        : ∀ e : Expr, eval v (fuse e) = eval v e :=
-  sorry
+  
+
+
+      
+
+
+
+
+
+      --  calc eval v (plus (fuse e₁) (fuse e₂))
+      --     _ = eval v (plus e₁ e₂)   := by simp [aux e₁, aux e₂, eval]
+      --  calc eval v (plus (fuse e₁) (fuse e₂))
+      --     _ = (eval v (fuse e₁)) + (eval v (fuse e₂)) := rfl
+      --     _ = eval v e₁ + eval v e₂ := by simp [aux e₁, aux e₂]
+      --     _ = eval v (plus e₁ e₂)   := rfl
+        --   _ = 
+        --   _ = eval v (plus e₁ e₂) := sorry
+
+
+      -- simp [eval, fuse e₁, fuse e₂]
+    
+    
+    --simp [aux e₁, aux e₂, eval, fuse, simpConst, simpConst_eq]
+
+
+
+-- theorem fuse_eq (v : Nat → Nat)
+--         : ∀ e : Expr, eval v (fuse e) = eval v e := by
+--     intro e
+--     rw [fuse]
+
+    -- match e with
+    -- | plus  e₁ e₂ => simp [aux e₁, aux e₂, eval, fuse, simpConst]
+    -- | times e₁ e₂ => simp [aux e₁, aux e₂, eval, fuse, simpConst]
+    -- | e'          => simp [eval, fuse, simpConst]
+
+  
+  
+
+
 
 
 /-

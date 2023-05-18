@@ -22,7 +22,7 @@ theorem simpColor_eq1
     match e with
     | branch (red n₁) (red n₂)     => rfl
     | branch (black n₁) (black n₂) => rfl
-    | e                            => rfl 
+    | e                            => rfl -- failure in overmatching case? 
 
 theorem simpColor_eq2
         : ∀ e : CTree, sum (simpColor e) = sum e := by
@@ -37,10 +37,10 @@ theorem simpColor_eq2
         | red n₁,     black n₂     => rfl
         | black n₁,   red n₂       => rfl
         | branch _ _, _            => rfl
-        | _,          branch _ _   => rfl -- why doesn't this work!?
+        | _,          branch _ _   => simp [simpColor] -- why doesn't this work with rfl?
 
 variable (t1 t2 t3 : CTree)
-example : simpColor (branch t1 (branch t2 t3)) = branch t1 (branch t2 t3) := by rfl
+example : simpColor (branch t1 (branch t2 t3)) = branch t1 (branch t2 t3) := by simp [simpColor]
 
 
 theorem simpColor_eq
@@ -48,8 +48,6 @@ theorem simpColor_eq
     intro e
     rw [simpColor]
     split <;> rfl
-
-
 
 example : simpColor (branch (branch t1 t2) t3) = branch (branch t1 t2) t3 := by rfl
 example : simpColor (branch (red m) (red n)) = red (m+n):= by rfl
